@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"log"
 	"os"
 	"os/signal"
@@ -67,9 +68,17 @@ Loop:
 							return
 						}
 						log.Println("Reading page", p)
-						if p <= 36 && p+4 >= 37 {
-							c := key.DecryptCharacter(b[(36-p)*4:])
-							log.Printf("\033[1;33mCharacter: %d\033[m", c)
+
+						if p == 35 {
+							is_vehicle := b[(38-p)*4+1]
+							log.Printf("\033[1;33mVehicle?: %d\033[m", is_vehicle)
+							if is_vehicle == 1 {
+								v := binary.LittleEndian.Uint32(b[(36-p)*4:])
+								log.Printf("\033[1;33mVehicle: %d\033[m", v)
+							} else {
+								c := key.DecryptCharacter(b[(36-p)*4:])
+								log.Printf("\033[1;33mCharacter: %d\033[m", c)
+							}
 						}
 					}
 					tp.Send(toypad.TagRead(ev.Index, uint8(p), cb))
